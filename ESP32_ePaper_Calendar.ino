@@ -98,7 +98,7 @@ void desenharCalendario(const String &agendaJson) {
     int diaSem = diaDaSemana(dia, dataAtual.mes, dataAtual.ano);
     int x = (diaSem * 62) + 38;
     if (dia == dataAtual.dia) {
-      display.fillRect((diaSem * 62) + 32, y - 26, 44, 36, EPD_RED);
+      display.fillRect((diaSem * 62) + 26, y - 26, 44, 36, EPD_RED);
       display.setTextColor(EPD_WHITE);
       display.setCursor(x, y);
     } else {
