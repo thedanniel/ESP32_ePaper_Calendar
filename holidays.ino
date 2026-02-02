@@ -1,62 +1,107 @@
 void feriado(int mes) {
+  int yPos = 390;  // Posição Y inicial
+  int xPos = 32;   // Posição X fixa
+  int lineSpacing = 10;  // Espaçamento entre linhas
+  
   switch (mes) {
     case 1:
+      display.setCursor(xPos, yPos);
       display.print("1 - Confraternização Universal");
       break;
+      
     case 2:
       if (MesCarnaval(dataAtual.ano) == 2) {
-        display.print(String(DiaCarnaval(dataAtual.ano) - 1) + " e " + String(DiaCarnaval(dataAtual.ano)) + " - Carnaval\n");
+        display.setCursor(xPos, yPos);
+        display.print(String(DiaCarnaval(dataAtual.ano) - 1) + " e " + String(DiaCarnaval(dataAtual.ano)) + " - Carnaval");
+        yPos += lineSpacing;
+        display.setCursor(xPos, yPos);
         display.print(String(DiaCarnaval(dataAtual.ano) + 1) + " - Quarta-feira de Cinzas");
       }
       break;
+      
     case 3:
       if (MesPascoa(dataAtual.ano) == 3) {
-        display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo\n");
+        display.setCursor(xPos, yPos);
+        display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo");
       } else if (MesCarnaval(dataAtual.ano) == 3) {
-        display.print(String(DiaCarnaval(dataAtual.ano) - 1) + " e " + String(DiaCarnaval(dataAtual.ano)) + " - Carnaval\n");
-        display.print(String(DiaCarnaval(dataAtual.ano) + 1) + " - Quarta-feira de Cinzas\n");
+        display.setCursor(xPos, yPos);
+        display.print(String(DiaCarnaval(dataAtual.ano) - 1) + " e " + String(DiaCarnaval(dataAtual.ano)) + " - Carnaval");
+        yPos += lineSpacing;
+        display.setCursor(xPos, yPos);
+        display.print(String(DiaCarnaval(dataAtual.ano) + 1) + " - Quarta-feira de Cinzas");
       }
       break;
+      
     case 4:
       if (MesPascoa(dataAtual.ano) == 4) {
         if (DiaPascoa(dataAtual.ano) <= 21) {
-          display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo\n");
-          display.print(String(DiaPascoa(dataAtual.ano)) + " - Páscoa\n");
+          display.setCursor(xPos, yPos);
+          display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo");
+          yPos += lineSpacing;
+          display.setCursor(xPos, yPos);
+          display.print(String(DiaPascoa(dataAtual.ano)) + " - Páscoa");
+          yPos += lineSpacing;
+          display.setCursor(xPos, yPos);
           display.print("21 - Tiradentes");
         } else {
-          display.print("21 - Tiradentes\n");
-          display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo\n");
+          display.setCursor(xPos, yPos);
+          display.print("21 - Tiradentes");
+          yPos += lineSpacing;
+          display.setCursor(xPos, yPos);
+          display.print(String(DiaPascoa(dataAtual.ano) - 2) + " - Paixão de Cristo");
+          yPos += lineSpacing;
+          display.setCursor(xPos, yPos);
           display.print(String(DiaPascoa(dataAtual.ano)) + " - Páscoa");
         }
       }
       break;
+      
     case 5:
-      display.print("1 - Dia do Trabalhador\n");
+      display.setCursor(xPos, yPos);
+      display.print("1 - Dia do Trabalhador");
       if (MesCorpusChristi(dataAtual.ano) == 5) {
+        yPos += lineSpacing;
+        display.setCursor(xPos, yPos);
         display.print(String(DiaCorpusChristi(dataAtual.ano)) + " - Corpus Christi");
       }
       break;
+      
     case 6:
       if (MesCorpusChristi(dataAtual.ano) == 6) {
+        display.setCursor(xPos, yPos);
         display.print(String(DiaCorpusChristi(dataAtual.ano)) + " - Corpus Christi");
       }
       break;
+      
     case 7:
       break;
+      
     case 8:
       break;
+      
     case 9:
+      display.setCursor(xPos, yPos);
       display.print("7 - Independência do Brasil");
       break;
+      
     case 10:
+      display.setCursor(xPos, yPos);
       display.print("12 - Nossa Sra Aparecida");
       break;
+      
     case 11:
-      display.print("2 - Dia de Finados\n");
-      display.print("15 - Proclamação da República\n");
+      display.setCursor(xPos, yPos);
+      display.print("2 - Dia de Finados");
+      yPos += lineSpacing;
+      display.setCursor(xPos, yPos);
+      display.print("15 - Proclamação da República");
+      yPos += lineSpacing;
+      display.setCursor(xPos, yPos);
       display.print("20 - Dia Nacional de Zumbi e da Consciência Negra");
       break;
+      
     case 12:
+      display.setCursor(xPos, yPos);
       display.print("25 - Natal");
       break;
   }
