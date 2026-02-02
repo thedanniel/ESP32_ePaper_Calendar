@@ -8,6 +8,8 @@
 #include "EPD_Graphics.h"
 #include <Fonts/FreeSansBold12pt7b.h>
 
+#define TRANSISTOR 10
+
 EPD_Graphics display;
 
 WiFiUDP ntpUDP;
@@ -63,6 +65,38 @@ void atualizarDataAtual() {
   diasMeses[1] = BISSEXTO(dataAtual.ano) ? 29 : 28;
 }
 
+// Função auxiliar para verificar se é feriado móvel
+bool ehFeriadoMovel(int dia, int mes, int ano) {
+  // Carnaval (47 dias antes da Páscoa)
+  if (MesCarnaval(ano) == mes) {
+    int diaCarnaval = DiaCarnaval(ano);
+    // Carnaval (segunda e terça)
+    if (dia == diaCarnaval - 1 || dia == diaCarnaval) {
+      return true;
+    }
+    // Quarta-feira de Cinzas
+    if (dia == diaCarnaval + 1) {
+      return true;
+    }
+  }
+
+  // Paixão de Cristo (sexta-feira antes da Páscoa)
+  if (MesPascoa(ano) == mes) {
+    if (dia == DiaPascoa(ano) - 2) {
+      return true;
+    }
+  }
+
+  // Corpus Christi (60 dias após a Páscoa)
+  if (MesCorpusChristi(ano) == mes) {
+    if (dia == DiaCorpusChristi(ano)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void desenharCalendario(const String &agendaJson) {
   display.setRotation(3);
   display.clearScreen(EPD_WHITE);
@@ -98,12 +132,23 @@ void desenharCalendario(const String &agendaJson) {
     int diaSem = diaDaSemana(dia, dataAtual.mes, dataAtual.ano);
     int x = (diaSem * 62) + 38;
     if (dia == dataAtual.dia) {
-      display.fillRect((diaSem * 62) + 26, y - 26, 44, 36, EPD_RED);
+      display.fillRect((diaSem * 62) + 30, y - 26, 42, 36, EPD_RED);
       display.setTextColor(EPD_WHITE);
       display.setCursor(x, y);
     } else {
+      // Verificação de feriados fixos E móveis
       bool ehFeriado =
-        diaSem == 0 || (dia == 1 && dataAtual.mes == 1) || (dia == 21 && dataAtual.mes == 4) || (dia == 1 && dataAtual.mes == 5) || (dia == 7 && dataAtual.mes == 9) || (dia == 12 && dataAtual.mes == 10) || (dia == 2 && dataAtual.mes == 11) || (dia == 15 && dataAtual.mes == 11) || (dia == 20 && dataAtual.mes == 11) || (dia == 25 && dataAtual.mes == 12);
+        diaSem == 0 ||                                      // Domingos
+        (dia == 1 && dataAtual.mes == 1) ||                 // Confraternização Universal
+        (dia == 21 && dataAtual.mes == 4) ||                // Tiradentes
+        (dia == 1 && dataAtual.mes == 5) ||                 // Dia do Trabalhador
+        (dia == 7 && dataAtual.mes == 9) ||                 // Independência do Brasil
+        (dia == 12 && dataAtual.mes == 10) ||               // Nossa Sra Aparecida
+        (dia == 2 && dataAtual.mes == 11) ||                // Dia de Finados
+        (dia == 15 && dataAtual.mes == 11) ||               // Proclamação da República
+        (dia == 20 && dataAtual.mes == 11) ||               // Consciência Negra
+        (dia == 25 && dataAtual.mes == 12) ||               // Natal
+        ehFeriadoMovel(dia, dataAtual.mes, dataAtual.ano);  // FERIADOS MÓVEIS
 
       display.setTextColor(ehFeriado ? EPD_RED : EPD_BLACK);
       display.setCursor(x, y);
@@ -177,8 +222,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 }
 
 void setup() {
-  Serial.begin(115200);
-
+  pinMode(TRANSISTOR, OUTPUT);
+  digitalWrite(TRANSISTOR, HIGH);
   if (!LittleFS.begin()) {
     while (true) {
       delay(100);
@@ -211,6 +256,52 @@ void setup() {
 
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
+
+  server.on(
+    "/schedule",
+    HTTP_POST,
+    [](AsyncWebServerRequest *request) {},
+    NULL,
+    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+      static String body;
+
+      if (index == 0) {
+        body = "";
+        body.reserve(total);
+      }
+
+      for (size_t i = 0; i < len; i++) {
+        body += (char)data[i];
+      }
+
+      if (index + len == total) {
+        StaticJsonDocument<1024> doc;
+        DeserializationError error = deserializeJson(doc, body);
+
+        if (error) {
+          request->send(400, "application/json", "{\"status\":\"error\"}");
+          return;
+        }
+
+        JsonArray schedule = doc["schedule"];
+        if (schedule.isNull()) {
+          request->send(400, "application/json", "{\"status\":\"error\"}");
+          return;
+        }
+
+        // 🔁 Converter para o formato que o display já usa
+        String agendaJson;
+        serializeJson(schedule, agendaJson);
+
+        atualizarDataAtual();
+        desenharCalendario(agendaJson);
+        display.waitBusy();
+
+        request->send(200, "application/json", "{\"status\":\"ok\"}");
+
+        body = "";
+      }
+    });
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html.gz", "text/html");
